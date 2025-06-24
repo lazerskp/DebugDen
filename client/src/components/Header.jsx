@@ -33,7 +33,7 @@ export default function Header() {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      navigate(`/login/home?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
@@ -63,6 +63,7 @@ export default function Header() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search questions..."
+                  onFocus={() => searchQuery && setShowResults(true)}
                   className="w-full p-2 pl-4 pr-10 border border-gray-300 rounded-full text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-black"
                 />
                 <button type="submit" className="absolute right-0 top-0 mt-2 mr-3" aria-label="Search">

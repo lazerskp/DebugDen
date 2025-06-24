@@ -18,7 +18,7 @@ const questionSchema = new Schema({
   },
   tags: {
     type: [String],
-    validate: [val => val.length <= 5, 'Cannot have more than 5 tags']
+    validate: [val => val.length <= 10, 'Cannot have more than 10 tags']
   },
   author: {
     type: Schema.Types.ObjectId,
@@ -40,5 +40,8 @@ const questionSchema = new Schema({
   }], default: [], // Ensure default empty array
   comments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Answer' }] // Assuming 'Answer' model exists
 }, { timestamps: true });
+
+// For text search
+questionSchema.index({ title: 'text', description: 'text', tags: 'text' });
 
 module.exports = mongoose.model('Question', questionSchema);

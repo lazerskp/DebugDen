@@ -125,7 +125,7 @@ export default function AskQuestion() {
               value={tags}
               onChange={(e) => setTags(e.target.value)}
             />
-            <p className="text-sm text-gray-500 mt-1">Add up to 5 tags to describe what your question is about.</p>
+            <p className="text-sm text-gray-500 mt-1">Add up to 10 tags to describe what your question is about.</p>
           </div>
 
           {/* Image Upload */}

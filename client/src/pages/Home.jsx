@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import toast from "react-hot-toast";
 import axios from "axios";
 
 function timeSince(date) {
@@ -19,18 +20,33 @@ function timeSince(date) {
 
 export default function Home() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showDescription, setShowDescription] = useState({});
 
+  const query = new URLSearchParams(location.search).get("q");
+
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:3000/api/v1/questions", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        let res;
+        if (query) {
+          res = await axios.get(`http://localhost:3000/api/v1/questions/search?q=${encodeURIComponent(query)}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.data.length === 0) {
+            toast.info(`No results found for "${query}".`);
+          } else {
+            toast.success(`Found ${res.data.length} results for "${query}".`);
+          }
+        } else {
+          res = await axios.get("http://localhost:3000/api/v1/questions", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
         setQuestions(res.data);
         setLoading(false);
       } catch (err) {
@@ -39,8 +55,8 @@ export default function Home() {
         setLoading(false);
       }
     };
-    fetchQuestions();
-  }, []);
+    fetchQuestions(); // Re-run fetch when query changes
+  }, [query]); // Depend on 'query'
 
   const toggleDescription = useCallback((id) => {
     setShowDescription((prev) => ({
@@ -77,10 +93,23 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
-        <div className="w-full max-w-screen-md mx-auto">
-          <h2 className="text-4xl font-extrabold text-gray-800 mb-8 border-b border-gray-300 pb-3 text-center animate-fade-in-down">
-            Explore Questions
+        <div className="w-full max-w-screen-md mx-auto relative">
+          <h2 className="text-4xl font-extrabold text-gray-800 mb-8 border-b border-gray-300 pb-3 text-center animate-fade-in-down flex items-center justify-center">
+            {query ? (
+              <>
+                Search Results for "<span className="text-blue-600">{query}</span>"
+                <button
+                  onClick={() => navigate('/login/home')}
+                  className="ml-4 text-sm bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded-full transition-colors"
+                >
+                  Clear Search
+                </button>
+              </>
+            ) : (
+              "Explore Questions"
+            )}
           </h2>
+
 
           {loading && (
             <p className="text-gray-600 text-center">Loading questions...</p>
@@ -89,7 +118,7 @@ export default function Home() {
           {!loading && !error && questions.length === 0 && (
             <p className="text-gray-600 text-center">
               No questions yet. Be the first to ask!
-            </p>
+            </p> // This message will now also apply to empty search results
           )}
 
           <div className="space-y-4">

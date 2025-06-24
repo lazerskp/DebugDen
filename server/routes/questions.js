@@ -40,6 +40,37 @@ router.get("/", authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/v1/questions/search?q=... - Search for questions
+router.get("/search", authMiddleware, async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) {
+      return res.status(400).json({ message: "Search query is required" });
+    }
+
+    const questions = await Question.find(
+      { $text: { $search: q } },
+      { score: { $meta: "textScore" } } // Project the text search score
+    )
+    .sort({ score: { $meta: "textScore" } }) // Sort by relevance
+    .populate("author", "name");
+
+    const questionsWithVoteStatus = questions.map(q => {
+      const questionObj = q.toObject ? q.toObject() : q;
+      return {
+        ...questionObj,
+        commentCount: questionObj.comments ? questionObj.comments.length : 0,
+        userVote: getUserVote(q, req.user.id)
+      };
+    });
+
+    res.json(questionsWithVoteStatus);
+  } catch (err) {
+    console.error("Backend error searching questions:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 router.get("/:id", async (req, res) => {
   try {
     const question = await Question.findById(req.params.id)

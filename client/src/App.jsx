@@ -6,7 +6,6 @@ import AskQuestion from "./pages/AskQuestion";
 import AnswerPage from "./pages/AnswerPage";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import SearchResults from "./pages/SearchReselts";
 import AboutUs from "./pages/AboutUs";
 import Navbar from "./components/Navbar";
 import LoggedInLayout from "./components/LoggedInLayout";
@@ -31,7 +30,6 @@ const AppContent = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/signup/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/search" element={<SearchResults />} />
         <Route path="/about" element={<AboutUs />} />
 
         {/* Logged-in routes with a consistent layout */}
