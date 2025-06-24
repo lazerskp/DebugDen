@@ -2,19 +2,22 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import LoadingSpinner from "../components/LoadingSpinner"; // Import the spinner
 import toast from "react-hot-toast";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(""); // Add error state
+  const [loading, setLoading] = useState(false); // Add loading state
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    setLoading(true); // Set loading to true before API call
     try {
-      const res = await axios.post("http://localhost:3000/api/v1/login", {
+      const res = await axios.post("/api/v1/login", { // Corrected to use relative path for Vite proxy
         email,
         password
       });
@@ -41,6 +44,8 @@ export default function Login() {
         // Generic fallback message
         setError("Login failed. Please check your credentials and try again.");
       }
+    } finally {
+      setLoading(false); // Set loading to false after API call (success or error)
     }
   };
 
@@ -78,10 +83,19 @@ export default function Login() {
             autoComplete="new-password"
             onChange={(e) => setPassword(e.target.value)}
           />
-          <button className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors hover:font-extrabold focus:outline-none focus:ring-2 focus:ring-black focus:ring-opacity-50 active:bg-gray-900">
-            Login
+          <button className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors hover:font-extrabold focus:outline-none focus:ring-2 focus:ring-black focus:ring-opacity-50 active:bg-gray-900 flex justify-center items-center h-10" disabled={loading}>
+            {loading ? <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div> : "Login"}
           </button>
         </form>
+        <p className="mt-4 text-sm text-center">
+          <Link
+            to="/forgot-password"
+            className="text-black hover:font-extrabold transition-all focus:outline-none"
+          >
+            Forgot password?
+          </Link>
+        </p>
+
         <p className="mt-4 text-sm text-center">
           Don't have an account?{" "}
           <Link

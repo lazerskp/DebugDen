@@ -20,7 +20,10 @@ router.get("/", authMiddleware, async (req, res) => {
     const questions = await Question.find()
       .sort({ createdAt: -1 })
       .populate("author", "name")
-      .populate({ path: "comments", populate: { path: "author", select: "name" } }); // Populate comments and their authors
+      .populate({
+        path: "comments",
+        populate: [{ path: "author", select: "name" }, { path: "likes", select: "name" }] // Populate author and likes for comments
+      });
 
     const questionsWithVoteStatus = questions.map(q => {
       // Use .lean() in the query to get plain JS objects directly,
@@ -75,7 +78,10 @@ router.get("/:id", async (req, res) => {
   try {
     const question = await Question.findById(req.params.id)
       .populate("author", "name")
-      .populate({ path: "comments", populate: { path: "author", select: "name" } }); // Populate comments and their authors
+      .populate({
+        path: "comments",
+        populate: [{ path: "author", select: "name" }, { path: "likes", select: "name" }] // Populate author and likes for comments
+      });
 
     if (!question) {
       return res.status(404).json({ message: "Question not found" });
@@ -102,7 +108,7 @@ router.post("/:id/comments", authMiddleware, async (req, res) => {
     });
     await newAnswer.save();
 
-    // Add the new answer's ID to the question's comments array
+    // Add the new answer's ID to the question's comments array and then populate it for the response
     await Question.findByIdAndUpdate(questionId, { $push: { comments: newAnswer._id } }, { new: true });
 
     await newAnswer.populate('author', 'name'); // Populate author for the response

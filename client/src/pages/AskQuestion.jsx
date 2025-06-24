@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
+import LoadingSpinner from "../components/LoadingSpinner"; // Import the spinner
 import toast from 'react-hot-toast';
 
 export default function AskQuestion() {
@@ -24,7 +25,7 @@ export default function AskQuestion() {
     try {
       const token = localStorage.getItem('token');
       // Note: Ensure your upload route is correct and authenticated
-      const { data } = await axios.post('http://localhost:3000/api/v1/upload', formData, {
+      const { data } = await axios.post('/api/v1/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`,
@@ -53,7 +54,7 @@ export default function AskQuestion() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post('http://localhost:3000/api/v1/questions/ask',
+      const res = await axios.post('/api/v1/questions/ask',
         { title, description, tags: tagsArray, imageUrl },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -154,7 +155,7 @@ export default function AskQuestion() {
             disabled={isSubmitting || isUploading}
           >
             {isSubmitting ? 'Submitting...' : '🚀 Submit Question'}
-          </button>
+          </button> {/* Spinner is implicitly handled by button text change */}
         </form>
       </div>
     </div>

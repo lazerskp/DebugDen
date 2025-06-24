@@ -15,10 +15,7 @@ const answerSchema = new mongoose.Schema({
     ref: 'Question',
     required: true,
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // Add this line
+}, { timestamps: true }); // Use timestamps option for createdAt and updatedAt
 
 module.exports = mongoose.model('Answer', answerSchema);

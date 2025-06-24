@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import LoadingSpinner from "../components/LoadingSpinner"; // Import the spinner
 import toast from "react-hot-toast";
 
 function timeSince(date) {
@@ -15,7 +16,7 @@ function timeSince(date) {
   if (interval >= 1) return `${interval} hour${interval === 1 ? "" : "s"}`;
   interval = Math.floor(seconds / 60);
   if (interval >= 1) return `${interval} minute${interval === 1 ? "" : "s"}`;
-  return `${Math.floor(seconds)} second${Math.floor(seconds) === 1 ? "" : "s"}`;
+  return `${seconds} second${seconds === 1 ? "" : "s"}`;
 }
 
 export default function AnswerPage() {
@@ -27,13 +28,21 @@ export default function AnswerPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Sort answers by the number of likes in descending order
+  const sortedAnswers = useMemo(() => {
+    if (!answers) return [];
+    // Create a copy before sorting to avoid mutating state directly
+    return [...answers].sort((a, b) => (b.likes?.length || 0) - (a.likes?.length || 0));
+  }, [answers]);
 
   const fetchQuestionAndAnswers = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `http://localhost:3000/api/v1/questions/${questionId}`,
+        `/api/v1/questions/${questionId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -51,6 +60,22 @@ export default function AnswerPage() {
   }, [questionId]);
 
   useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const res = await axios.get('/api/v1/users/me', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setCurrentUser(res.data.user);
+        } catch (err) {
+          console.error("Could not fetch current user", err);
+          // Don't block the page from loading, just log the error
+        }
+      }
+    };
+
+    fetchCurrentUser();
     fetchQuestionAndAnswers();
   }, [fetchQuestionAndAnswers]);
 
@@ -64,7 +89,7 @@ export default function AnswerPage() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(
-        `http://localhost:3000/api/v1/questions/${questionId}/comments`,
+        `/api/v1/questions/${questionId}/comments`,
         { text: newAnswer },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -85,7 +110,32 @@ export default function AnswerPage() {
     }
   };
 
-  if (loading) return <div className="text-center p-10">Loading question...</div>;
+  const handleLike = async (commentId) => {
+    if (!currentUser) {
+      toast.error("You must be logged in to like an answer.");
+      return;
+    }
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.put(
+        `/api/v1/answers/${commentId}/like`, // Corrected API endpoint
+        {}, // No body needed
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const updatedComment = res.data.answer; // The backend now returns an 'answer' object
+      setAnswers((prevAnswers) =>
+        prevAnswers.map(answer =>
+          answer._id === commentId ? updatedComment : answer
+        )
+      );
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update like status.");
+    }
+  };
+
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><LoadingSpinner /></div>;
   if (error) return <div className="text-center p-10 text-red-500">{error}</div>;
   if (!question) return <div className="text-center p-10">Question not found.</div>;
 
@@ -155,13 +205,28 @@ export default function AnswerPage() {
           <h2 className="text-2xl font-bold text-gray-800 border-b pb-2">
             {answers.length} {answers.length === 1 ? "Answer" : "Answers"}
           </h2>
-          {answers.length > 0 ? (
-            answers.map((answer) => (
-              <div key={answer._id} className="bg-white rounded-lg shadow p-5">
+          {sortedAnswers.length > 0 ? (
+            sortedAnswers.map((answer) => (
+              <div key={answer._id} className="bg-white rounded-lg shadow p-5 transition-shadow hover:shadow-md">
                 <p className="text-gray-700 whitespace-pre-wrap mb-4">{answer.text}</p>
-                <div className="text-right text-sm text-gray-500 mt-4">
-                  Answered {timeSince(new Date(answer.createdAt))} ago by{" "}
-                  <span className="font-medium text-gray-700">{answer.author?.name || "Anonymous"}</span>
+                <div className="flex justify-between items-center mt-4">
+                  <div className="text-sm text-gray-500">
+                    Answered {timeSince(new Date(answer.createdAt))} ago by{" "}
+                    <span className="font-medium text-gray-700">{answer.author?.name || "Anonymous"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleLike(answer._id)}
+                      className="flex items-center gap-1.5 text-gray-500 hover:text-blue-600 transition-colors p-1 rounded-md"
+                      aria-label="Like this answer"
+                    >
+                      <svg className={`w-5 h-5 transition-colors ${answer.likes?.includes(currentUser?._id) ? 'text-black fill-current' : 'text-black stroke-current'}`}
+                           viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                      </svg>
+                      <span className="font-medium text-sm">{answer.likes?.length || 0}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))

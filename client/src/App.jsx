@@ -11,6 +11,7 @@ import Navbar from "./components/Navbar";
 import LoggedInLayout from "./components/LoggedInLayout";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import ForgotPassword from "./pages/ForgotPassword"; // Import ForgotPassword component
 import { Toaster } from "react-hot-toast";
 
 const AppContent = () => {
@@ -31,6 +32,7 @@ const AppContent = () => {
         <Route path="/signup/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/about" element={<AboutUs />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} /> {/* Add this route */}
 
         {/* Logged-in routes with a consistent layout */}
         <Route element={<LoggedInLayout />}>

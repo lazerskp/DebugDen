@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import axios from "axios";
 
+import LoadingSpinner from "../components/LoadingSpinner"; // Import the spinner
+
 function timeSince(date) {
   const seconds = Math.floor((new Date() - date) / 1000);
   let interval = Math.floor(seconds / 31536000);
@@ -34,7 +36,7 @@ export default function Home() {
         const token = localStorage.getItem("token");
         let res;
         if (query) {
-          res = await axios.get(`http://localhost:3000/api/v1/questions/search?q=${encodeURIComponent(query)}`, {
+          res = await axios.get(`/api/v1/questions/search?q=${encodeURIComponent(query)}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (res.data.length === 0) {
@@ -43,7 +45,7 @@ export default function Home() {
             toast.success(`Found ${res.data.length} results for "${query}".`);
           }
         } else {
-          res = await axios.get("http://localhost:3000/api/v1/questions", {
+          res = await axios.get("/api/v1/questions", {
             headers: { Authorization: `Bearer ${token}` },
           });
         }
@@ -69,7 +71,7 @@ export default function Home() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.put(
-        `http://localhost:3000/api/v1/questions/${questionId}/vote`,
+        `/api/v1/questions/${questionId}/vote`,
         { type: voteType },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -111,9 +113,9 @@ export default function Home() {
           </h2>
 
 
-          {loading && (
-            <p className="text-gray-600 text-center">Loading questions...</p>
-          )}
+          {/* Display LoadingSpinner when loading */}
+          {loading && <LoadingSpinner />}
+
           {error && <p className="text-red-500 text-center">{error}</p>}
           {!loading && !error && questions.length === 0 && (
             <p className="text-gray-600 text-center">

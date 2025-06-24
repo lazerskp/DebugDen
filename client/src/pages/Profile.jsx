@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import LoadingSpinner from '../components/LoadingSpinner'; // Import the spinner
 import toast from 'react-hot-toast';
 
 export default function Profile() {
@@ -23,7 +24,7 @@ export default function Profile() {
           return;
         }
 
-        const response = await axios.get('http://localhost:3000/api/v1/users/me', {
+        const response = await axios.get('/api/v1/users/me', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -53,7 +54,7 @@ export default function Profile() {
     setIsSaving(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.put('http://localhost:3000/api/v1/users/me', formData, {
+      const res = await axios.put('/api/v1/users/me', formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -72,7 +73,7 @@ export default function Profile() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Loading profile...</p>
+        <LoadingSpinner />
       </div>
     );
   }
